@@ -119,6 +119,17 @@ SlsLogger.log(
 `'app_start'`) vì server validate cả batch — một event sai định dạng sẽ làm
 server từ chối **toàn bộ** batch.
 
+**Gắn user để tra log về sau:**
+
+```dart
+SlsLogger.setUser('u-123');   // lúc đăng nhập
+SlsLogger.setUser(null);      // lúc đăng xuất
+```
+
+`user_id` được gắn vào mọi event ghi **sau** lời gọi đó. Log ghi trước khi đăng
+nhập không bị gán hồi tố — storage là append-only, và đó cũng là sự thật: lúc
+ấy chưa biết ai đang dùng.
+
 **Bắt crash toàn app** (khuyến nghị):
 
 ```dart

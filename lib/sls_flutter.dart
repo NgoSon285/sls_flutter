@@ -108,6 +108,16 @@ class SlsLogger {
     }
   }
 
+  /// Gắn user vào mọi event ghi **sau lời gọi này** — để tra log theo người dùng.
+  /// Gọi lúc đăng nhập; truyền null khi đăng xuất.
+  ///
+  /// Event đã ghi trước đó không đổi (append-only): log trước khi đăng nhập vẫn
+  /// không có user, đúng với thực tế lúc nó xảy ra.
+  static void setUser(String? userId) => _logger?.userId = userId;
+
+  /// User đang gắn, null nếu chưa [setUser].
+  static String? get userId => _logger?.userId;
+
   /// Ghi event xuống local storage (append-only, không chạm network).
   static void log(
     String eventType,

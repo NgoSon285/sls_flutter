@@ -67,6 +67,9 @@ class _HomeState extends State<_Home> {
   int _written = 0;
   bool _syncing = false;
 
+  /// App thật lấy từ phiên đăng nhập; ở đây là user giả để demo.
+  String? _user;
+
   void _say(String line) => setState(() => _lines.insert(0, line));
 
   void _logTrade() {
@@ -115,6 +118,17 @@ class _HomeState extends State<_Home> {
     }
   }
 
+  void _toggleLogin() {
+    // App thật: gọi setUser lúc đăng nhập thành công, setUser(null) lúc đăng
+    // xuất, và gọi lại NGAY SAU init nếu phiên đăng nhập cũ còn hiệu lực —
+    // quên bước đó thì cả phiên chạy không có user_id.
+    setState(() => _user = _user == null ? 'u-demo-42' : null);
+    SlsLogger.setUser(_user);
+    _say(_user == null
+        ? 'đăng xuất — event sau đây không còn user_id'
+        : 'đăng nhập $_user — event sau đây mang user_id này');
+  }
+
   Future<void> _showConfig() async {
     await SlsLogger.refreshConfig();
     final c = SlsLogger.remoteConfig;
@@ -159,6 +173,7 @@ class _HomeState extends State<_Home> {
               children: [
                 Text('$_endpoint · $_projectId · $_environment'),
                 Text('session: ${SlsLogger.sessionId ?? "chưa init"}'),
+                Text('user: ${SlsLogger.userId ?? "chưa đăng nhập"}'),
                 Text('đã ghi local: $_written event · auto sync 30s'),
                 const SizedBox(height: 12),
                 Wrap(
@@ -179,6 +194,10 @@ class _HomeState extends State<_Home> {
                         onPressed: _showFiles, child: const Text('Xem file')),
                     OutlinedButton(
                         onPressed: _showConfig, child: const Text('Config')),
+                    OutlinedButton(
+                      onPressed: _toggleLogin,
+                      child: Text(_user == null ? 'Đăng nhập' : 'Đăng xuất'),
+                    ),
                   ],
                 ),
               ],

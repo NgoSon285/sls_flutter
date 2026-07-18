@@ -64,6 +64,9 @@ class Logger {
   bool _enabled = true;
   Duration? syncInterval;
 
+  /// Gắn vào mọi event sau đó. Null (mặc định) thì không gửi field `user_id`.
+  String? userId;
+
   /// Cấu hình server trả về ở lần [refreshConfig] gần nhất. Rỗng nếu chưa gọi
   /// được — dùng để hiển thị/chẩn đoán, logic đọc các field riêng ở trên.
   Map<String, dynamic> remoteConfig = const {};
@@ -105,6 +108,9 @@ class Logger {
       'plugin_name': 'core',
       'plugin_version': sdkVersion,
       'platform': Platform.operatingSystem,
+      // Optional (Event Model §5): chỉ gửi khi có, để server không phải lưu NULL
+      // và index partial trên user_id không phình.
+      if (userId != null) 'user_id': userId,
       'payload': payload,
     });
   }

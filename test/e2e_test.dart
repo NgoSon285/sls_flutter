@@ -231,6 +231,25 @@ void main() {
     await server.stop();
   });
 
+  test('setUser: gắn user_id vào event ghi sau đó, không sửa event cũ', () async {
+    final server = await FakeServer.start();
+    await initSdk(server.endpoint);
+
+    SlsLogger.logEvent('truoc-dang-nhap', {});
+    SlsLogger.setUser('u-123');
+    SlsLogger.logEvent('sau-dang-nhap', {});
+    SlsLogger.setUser(null); // đăng xuất
+    SlsLogger.logEvent('sau-dang-xuat', {});
+
+    await SlsLogger.syncAll();
+    final logs = server.allLogs;
+    // append-only: log ghi trước khi đăng nhập không được gán user hồi tố
+    expect(logs[0].containsKey('user_id'), isFalse);
+    expect(logs[1]['user_id'], 'u-123');
+    expect(logs[2].containsKey('user_id'), isFalse);
+    await server.stop();
+  });
+
   test('remote config: batch_size và enabled từ GET /config', () async {
     final server = await FakeServer.start(config: {'batch_size': 2});
     await initSdk(server.endpoint);
