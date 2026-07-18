@@ -1,0 +1,20 @@
+name: sls_flutter
+description: "Offline-first logging SDK: append-only local storage (BLF), batch sync with retry, hybrid encryption. Pure Dart, no native build."
+version: 0.1.0
+repository: https://github.com/NgoSon285/sls-flutter
+
+environment:
+  sdk: ^3.5.0
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  uuid: ^4.5.0
+  pointycastle: ^3.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
