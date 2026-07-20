@@ -7,7 +7,7 @@ import 'package:sls_flutter/sls_flutter.dart';
 // Đổi sang project của bạn. `dev/dev-key` là project seed sẵn trên backend.
 const _endpoint = 'https://sls-upload-api.onrender.com';
 const _projectId = 'dev';
-const _apiKey = 'dev-key';
+const _apiKey = 'sls_dev_ICOqJwVfGKHDw0jXKkvTyTYgxbzOe_fx';
 
 // development: log local là JSONL đọc bằng mắt được, upload plain.
 // Đổi sang 'production' để thấy file .blf mã hoá (cần serverPublicKey mới
@@ -49,10 +49,10 @@ class _App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'SLS example',
-        theme: ThemeData(colorSchemeSeed: Colors.indigo),
-        home: const _Home(),
-      );
+    title: 'SLS example',
+    theme: ThemeData(colorSchemeSeed: Colors.indigo),
+    home: const _Home(),
+  );
 }
 
 class _Home extends StatefulWidget {
@@ -107,9 +107,11 @@ class _HomeState extends State<_Home> {
     final t = Stopwatch()..start();
     try {
       final n = await SlsLogger.syncAll();
-      _say(n == 0
-          ? 'sync: không còn log nào chưa gửi (${t.elapsedMilliseconds}ms)'
-          : 'sync: server nhận $n event (${t.elapsedMilliseconds}ms)');
+      _say(
+        n == 0
+            ? 'sync: không còn log nào chưa gửi (${t.elapsedMilliseconds}ms)'
+            : 'sync: server nhận $n event (${t.elapsedMilliseconds}ms)',
+      );
     } catch (e) {
       // Offline-first: lỗi ở đây không mất log, lần sync sau gửi tiếp.
       _say('sync lỗi: $e — log vẫn nằm trên đĩa');
@@ -124,9 +126,11 @@ class _HomeState extends State<_Home> {
     // quên bước đó thì cả phiên chạy không có user_id.
     setState(() => _user = _user == null ? 'u-demo-42' : null);
     SlsLogger.setUser(_user);
-    _say(_user == null
-        ? 'đăng xuất — event sau đây không còn user_id'
-        : 'đăng nhập $_user — event sau đây mang user_id này');
+    _say(
+      _user == null
+          ? 'đăng xuất — event sau đây không còn user_id'
+          : 'đăng nhập $_user — event sau đây mang user_id này',
+    );
   }
 
   Future<void> _showConfig() async {
@@ -150,9 +154,11 @@ class _HomeState extends State<_Home> {
       return;
     }
     final cp = File('$logDir/metadata/checkpoint.meta');
-    _say(cp.existsSync()
-        ? 'checkpoint: ${cp.readAsStringSync()}'
-        : 'checkpoint: chưa có (chưa sync thành công lần nào)');
+    _say(
+      cp.existsSync()
+          ? 'checkpoint: ${cp.readAsStringSync()}'
+          : 'checkpoint: chưa có (chưa sync thành công lần nào)',
+    );
     for (final f in dir.listSync().whereType<File>()) {
       _say('${f.uri.pathSegments.last} — ${f.lengthSync()} byte');
     }
@@ -181,19 +187,29 @@ class _HomeState extends State<_Home> {
                   runSpacing: 8,
                   children: [
                     FilledButton(
-                        onPressed: _logTrade, child: const Text('Log trade')),
+                      onPressed: _logTrade,
+                      child: const Text('Log trade'),
+                    ),
                     FilledButton.tonal(
-                        onPressed: _logEvent, child: const Text('Log event')),
+                      onPressed: _logEvent,
+                      child: const Text('Log event'),
+                    ),
                     FilledButton.tonal(
-                        onPressed: _logCrash, child: const Text('Log crash')),
+                      onPressed: _logCrash,
+                      child: const Text('Log crash'),
+                    ),
                     OutlinedButton(
                       onPressed: _syncing ? null : _sync,
                       child: Text(_syncing ? 'Đang sync...' : 'Sync now'),
                     ),
                     OutlinedButton(
-                        onPressed: _showFiles, child: const Text('Xem file')),
+                      onPressed: _showFiles,
+                      child: const Text('Xem file'),
+                    ),
                     OutlinedButton(
-                        onPressed: _showConfig, child: const Text('Config')),
+                      onPressed: _showConfig,
+                      child: const Text('Config'),
+                    ),
                     OutlinedButton(
                       onPressed: _toggleLogin,
                       child: Text(_user == null ? 'Đăng nhập' : 'Đăng xuất'),

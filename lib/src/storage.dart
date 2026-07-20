@@ -57,6 +57,20 @@ class Storage {
   final Uint8List? _key;
   final Limits _limits;
 
+  /// Số record đã bỏ vì không giải mã/parse được, tính từ lần [takeDropped] gần nhất.
+  ///
+  /// ponytail: đếm trong RAM, mất nếu app tắt trước lúc sync. Ceiling: crash ngay
+  /// sau khi đọc phải file hỏng thì con số không tới được server. Ghi xuống
+  /// metadata/dropped.meta nếu cần đếm chính xác tuyệt đối.
+  int _dropped = 0;
+
+  /// Đọc và reset. Logger gọi lúc sync để biến con số thành event chẩn đoán.
+  int takeDropped() {
+    final n = _dropped;
+    _dropped = 0;
+    return n;
+  }
+
   String get _ext => jsonl ? 'jsonl' : 'blf';
   File get _checkpointFile => File('$_root/metadata/checkpoint.meta');
 
@@ -192,7 +206,10 @@ class Storage {
         try {
           events.add(jsonDecode(utf8.decode(plain)));
         } catch (_) {
-          // ponytail: bỏ record giải mã/parse hỏng, không chặn cả hàng đợi
+          // Bỏ record hỏng để không chặn hàng đợi — nhưng ĐẾM lại. Mất log âm
+          // thầm là thứ tệ nhất trong hệ thống hứa không mất log; Logger đọc con
+          // số này rồi gửi lên thành event chẩn đoán.
+          _dropped++;
         }
       }
       return (events, pos);
@@ -209,14 +226,20 @@ class Storage {
       final rest = utf8.decode(f.readSync(f.lengthSync() - offset));
       final events = [];
       var pos = offset;
-      for (final line in rest.split('\n')) {
+      final lines = rest.split('\n');
+      // Phần sau '\n' cuối cùng: rỗng, hoặc là dòng đang ghi dở lúc crash. Chưa
+      // tính nó — nếu tính thì record đó vừa bị bỏ vừa bị nhảy qua vĩnh viễn
+      // (Storage Spec §22), và mỗi lần crash lại báo nhầm một record hỏng.
+      lines.removeLast();
+      for (final line in lines) {
         if (events.length >= max) break;
-        if (line.isEmpty) continue;
         pos += utf8.encode(line).length + 1;
-        // Bỏ qua dòng hỏng (ghi dở khi crash) — Storage Spec §22
+        if (line.isEmpty) continue;
         try {
           events.add(jsonDecode(line));
-        } catch (_) {}
+        } catch (_) {
+          _dropped++;
+        }
       }
       return (events, pos);
     } finally {

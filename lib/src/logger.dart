@@ -152,11 +152,24 @@ class Logger {
 
   Future<int> _syncOnce(int max) async {
     final batch = _storage.readBatch(max);
+    // Trước cả khi thoát vì hết log: lần đọc vừa rồi có thể đã bỏ record hỏng, mà
+    // đó lại đúng là lúc cần báo nhất.
+    _reportDropped();
     if (batch == null) return 0;
     final (events, cp) = batch;
     await _upload(events);
     _storage.saveCheckpoint(cp);
     return events.length;
+  }
+
+  /// Ghi lại số record hỏng mà Storage đã bỏ, thành một event thật.
+  ///
+  /// Bỏ record hỏng là đúng (không chặn hàng đợi), bỏ mà im lặng thì mới sai: hệ
+  /// thống hứa "log không bao giờ mất" nên mọi mất mát phải đếm được ở server.
+  /// Event này đi qua đúng đường ống bình thường, sẽ nằm trong batch kế tiếp.
+  void _reportDropped() {
+    final n = _storage.takeDropped();
+    if (n > 0) log('sls/storage/corrupt', 'high', {'dropped_records': n});
   }
 
   /// null = hết log, 1 = gửi được, 0 = phải bỏ event hỏng.

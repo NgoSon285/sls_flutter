@@ -230,6 +230,39 @@ void main() {
       dir.deleteSync(recursive: true);
     });
 
+    test('record hỏng bị bỏ nhưng ĐƯỢC ĐẾM, không mất âm thầm', () {
+      final dir = tempDir();
+      final s = Storage.open(dir.path, jsonl: true);
+      s.append(sample(1));
+      s.append(sample(2));
+
+      // Chèn một dòng rác vào giữa: đọc được record tốt, đếm được record hỏng.
+      final f = Directory('${dir.path}/logs').listSync().first as File;
+      final lines = f.readAsStringSync().split('\n');
+      f.writeAsStringSync('${lines[0]}\nkhông-phải-json\n${lines[1]}\n');
+
+      final (events, _) = s.readBatch(10)!;
+      expect(events.length, 2, reason: 'record tốt vẫn phải đọc được');
+      expect(s.takeDropped(), 1);
+      expect(s.takeDropped(), 0, reason: 'đọc xong phải reset, không báo trùng');
+      dir.deleteSync(recursive: true);
+    });
+
+    test('dòng ghi dở lúc crash không bị tính là hỏng', () {
+      final dir = tempDir();
+      final s = Storage.open(dir.path, jsonl: true);
+      s.append(sample(1));
+      // Ghi dở: không có '\n' kết thúc. Nếu tính nó là record hỏng thì mỗi lần
+      // crash lại báo nhầm một mất mát, và record đó bị nhảy qua vĩnh viễn.
+      final f = Directory('${dir.path}/logs').listSync().first as File;
+      f.writeAsStringSync('{"event_id":"dang-ghi-do"', mode: FileMode.append);
+
+      final (events, _) = s.readBatch(10)!;
+      expect(events.length, 1);
+      expect(s.takeDropped(), 0);
+      dir.deleteSync(recursive: true);
+    });
+
     test('file BLF mã hoá không lộ plaintext', () {
       final dir = tempDir();
       Storage.open(dir.path, jsonl: false, key: crypto.deriveKey('k'))
